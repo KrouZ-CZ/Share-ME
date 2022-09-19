@@ -1,0 +1,4 @@
+pyqt5
+rsa
+netifaces
+git+https://github.com/KvantPro/encryptor-pip
