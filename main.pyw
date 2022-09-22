@@ -49,7 +49,7 @@ class App(QtWidgets.QWidget, New_Thread):
         if self.ui.ip.text() == '': return
         fn = self.ui.fil.text()
         
-        self.new_thread(Sender, (fn, self.ui.ip.text()), self.signal_handler)
+        self.new_thread(Sender, (fn, self.ui.ip.text()), self.signal_handler, [lambda: self.ui.send.setDisabled(False), lambda: self.ui.get.setDisabled(False), lambda: create_dialog('OK', 'Файл успешно отправлен')])
         self.ui.filename.setText('Ожидаю подключения')
         self.ui.send.setDisabled(True)
         self.ui.get.setDisabled(True)
