@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from client import *
 from des import *
 from server import *
+from create_thread import New_Thread
 
 def create_dialog(title, message):
     msg = QtWidgets.QMessageBox()
@@ -17,9 +18,9 @@ def create_dialog(title, message):
 
     msg.exec_()
 
-class App(QtWidgets.QWidget):
-    def __init__(self, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
+class App(QtWidgets.QWidget, New_Thread):
+    def __init__(self):
+        super().__init__()
         self.ui = Ui_Form()
         self.ui.setupUi(self)
 
@@ -47,42 +48,23 @@ class App(QtWidgets.QWidget):
         if self.ui.fil.text() == '': return
         if self.ui.ip.text() == '': return
         fn = self.ui.fil.text()
-        self.thread = QtCore.QThread()
-        self.signal = Sender(fn, self.ui.ip.text())
-        self.signal.moveToThread(self.thread)
-        self.signal.mysignal.connect(self.signal_handler)
-        self.thread.started.connect(self.signal.run)
-        self.signal.fineshed.connect(self.thread.quit)
-        self.signal.fineshed.connect(self.signal.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
+        
+        self.new_thread(Sender, (fn, self.ui.ip.text()), self.signal_handler)
+        self.ui.filename.setText('Ожидаю подключения')
         self.ui.send.setDisabled(True)
         self.ui.get.setDisabled(True)
-        self.thread.finished.connect(lambda: self.ui.send.setDisabled(False))
-        self.thread.finished.connect(lambda: self.ui.get.setDisabled(False))
-        self.thread.finished.connect(lambda: create_dialog('OK', 'Файл успешно отправлен'))
-        self.thread.start()
 
     def signal_handler(self, signal):
         self.ui.progressBar.setValue(signal)
 
     def get_file(self):
         if self.ui.lineEdit.text() == '': return
-        self.thread = QtCore.QThread()
-        self.signal = Server(self.ui.lineEdit.text())
-        self.signal.moveToThread(self.thread)
-        self.signal.mysignal.connect(self.gsignal_handler)
-        self.thread.started.connect(self.signal.start)
-        self.signal.fineshed.connect(self.thread.quit)
-        self.signal.fineshed.connect(self.signal.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
+
+        self.new_thread(Server, (self.ui.lineEdit.text(), ), self.gsignal_handler, [lambda: self.ui.send.setDisabled(False), lambda: self.ui.get.setDisabled(False),lambda: self.ui.ip_l.setText(''),lambda: self.ui.progressBar_2.setValue(100)])
+        
         self.ui.filename.setText('Ожидаю подключения')
         self.ui.send.setDisabled(True)
         self.ui.get.setDisabled(True)
-        self.thread.finished.connect(lambda: self.ui.send.setDisabled(False))
-        self.thread.finished.connect(lambda: self.ui.get.setDisabled(False))
-        self.thread.finished.connect(lambda: self.ui.ip_l.setText(''))
-        self.thread.finished.connect(lambda: self.ui.progressBar_2.setValue(100))
-        self.thread.start()
 
     def gsignal_handler(self, signal):
         match signal[0]:
